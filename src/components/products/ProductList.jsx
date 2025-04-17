@@ -15,17 +15,38 @@ const ProductList = () => {
     status,
     error,
     loadMore,
+    retryLastFetch,
   } = useProductData(fetchProducts, (state) => state.products);
 
   if (status === "loading" && (!products || products.length === 0)) {
     return <LoadingSpinner />;
   }
 
-  if (status === "failed") {
+  if (status === "failed" && (!products || products.length === 0)) {
     return (
-      <ErrorView error={error} onRetry={() => dispatch(fetchProducts(0))} />
+      <ErrorView
+        error={error || "Failed to load products"}
+        onRetry={() => dispatch(fetchProducts(0))}
+      />
     );
   }
+
+  const ListFooterComponent = () => {
+    if (status === "loading" && products.length > 0) {
+      return <LoadingSpinner />;
+    }
+    if (status === "failed" && products.length > 0) {
+      return (
+        <ErrorView
+          error={error || "Failed to load more products"}
+          onRetry={retryLastFetch}
+          minimal={true}
+          retryText="Try Again"
+        />
+      );
+    }
+    return null;
+  };
 
   return (
     <View style={styles.container}>
@@ -33,8 +54,9 @@ const ProductList = () => {
         data={products || []}
         renderItem={({ item }) => <ProductCard item={item} />}
         keyExtractor={(item, index) => `${item.id}-${index}`}
-        onEndReached={loadMore}
+        onEndReached={status !== "failed" ? loadMore : null}
         isLoading={status === "loading"}
+        ListFooterComponent={ListFooterComponent}
       />
     </View>
   );

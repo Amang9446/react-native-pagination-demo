@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 
 export const useProductData = (fetchAction, selector, pageSize = 10) => {
@@ -11,11 +11,17 @@ export const useProductData = (fetchAction, selector, pageSize = 10) => {
     }
   }, [status, dispatch, fetchAction]);
 
-  const loadMore = () => {
-    if (hasMore && status !== "loading") {
-      dispatch(fetchAction(products.length / pageSize));
+  const loadMore = useCallback(() => {
+    if (hasMore && status !== "loading" && status !== "failed") {
+      dispatch(fetchAction(Math.floor(products.length / pageSize)));
     }
-  };
+  }, [hasMore, status, products.length, pageSize, dispatch, fetchAction]);
+
+  const retryLastFetch = useCallback(() => {
+    if (status === "failed") {
+      dispatch(fetchAction(Math.floor(products.length / pageSize)));
+    }
+  }, [status, products.length, pageSize, dispatch, fetchAction]);
 
   return {
     items: products,
@@ -23,5 +29,6 @@ export const useProductData = (fetchAction, selector, pageSize = 10) => {
     error,
     hasMore,
     loadMore,
+    retryLastFetch,
   };
 };
