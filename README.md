@@ -1,4 +1,4 @@
-# Machine Test Round
+# react-native-pagination-demo
 
 ## Features
 
